@@ -15,8 +15,7 @@ public class PersonCRUDmedJPA implements PersonCRUD {
 	
 	/* Konstruktør */
 	public PersonCRUDmedJPA() {
-		emf = Persistence.createEntityManagerFactory("personPersistenceUnit", 
-				Map.of("jakarta.persistence.jdbc.password", Passwords.DAT107_DB_PASSWORD));
+		emf = Persistence.createEntityManagerFactory("personPersistenceUnit");
 	}
 	
 	@Override
