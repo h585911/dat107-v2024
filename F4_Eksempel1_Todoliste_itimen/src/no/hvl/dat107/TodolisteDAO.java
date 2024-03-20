@@ -16,8 +16,7 @@ public class TodolisteDAO {
 	private EntityManagerFactory emf;
 
 	public TodolisteDAO() {
-		emf = Persistence.createEntityManagerFactory("todosPU",
-				Map.of("jakarta.persistence.jdbc.password", Passwords.DAT107_DB_PASSWORD));
+		emf = Persistence.createEntityManagerFactory("todosPU");
 
 	}
 
