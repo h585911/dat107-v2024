@@ -1,11 +1,12 @@
 package no.hvl.dat107;
 
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.Persistence;
 import jakarta.persistence.TypedQuery;
 
@@ -14,18 +15,17 @@ public class VitnemalDAO {
     private EntityManagerFactory emf;
 
     public VitnemalDAO() {
-        emf = Persistence.createEntityManagerFactory("vitnemalPU",
-		Map.of("jakarta.persistence.jdbc.password", Passwords.DAT107_DB_PASSWORD));
+        emf = Persistence.createEntityManagerFactory("vitnemalPU");
     }
     
     /* --------------------------------------------------------------------- */
 
-    public /*TODO*/void hentVitnemalForStudent(/*TODO*/) {
+    public Vitnemal hentVitnemalForStudent(int studnr) {
         
         EntityManager em = emf.createEntityManager();
         try {
         	
-        	/*TODO*/
+        	return em.find(Vitnemal.class, studnr);
         	
         } finally {
             em.close();
@@ -34,14 +34,21 @@ public class VitnemalDAO {
 
     /* --------------------------------------------------------------------- */
 
-    public /*TODO*/void hentKarakterForStudentIEmne(/*TODO*/) {
+    public Karakter hentKarakterForStudentIEmne(int studnr, String emnekode) {
         
         EntityManager em = emf.createEntityManager();
         
         try {
         	
-        	/*TODO*/
+        	String q = "SELECT k FROM Karakter AS k WHERE k.vitnemal.studnr = :studnr AND k.emnekode = :emnekode";
+        	TypedQuery<Karakter> query = em.createQuery(q, Karakter.class);
+        	query.setParameter("studnr", studnr);
+        	query.setParameter("emnekode", emnekode);
         	
+        	return query.getSingleResult();
+        	
+        } catch (NoResultException e) {
+        	return null;
         } finally {
             em.close();
         }
@@ -49,7 +56,7 @@ public class VitnemalDAO {
     
     /* --------------------------------------------------------------------- */
 
-    public /*TODO*/void registrerKarakterForStudent(/*TODO*/) {
+    public void registrerKarakterForStudent(int studnr, String emnekode, LocalDate eksdato, String bokstav) {
         
         EntityManager em = emf.createEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -57,7 +64,32 @@ public class VitnemalDAO {
         try {
         	tx.begin();
         	
-        	/*TODO*/
+        	Karakter gml = hentKarakterForStudentIEmne(studnr, emnekode);
+        	// gml er "detatched".
+        	
+        	Vitnemal vm = em.find(Vitnemal.class, studnr);
+        	// vm er "managed"
+        	
+        	if(gml != null) {
+        		vm.fjernKarakter(gml);
+        		
+        		gml = em.merge(gml);
+        		// Her blir gml "managed"
+        		
+        		em.remove(gml);
+        		// Her blir gml "removed"
+        		
+        		em.flush();
+        	}
+        	
+        	Karakter ny = new Karakter(emnekode, eksdato, bokstav);
+        	// ny er "new"
+        	
+        	ny.setVitnemal(vm);
+        	vm.leggTilKarakter(ny);
+        	
+        	em.persist(ny);
+        	// Her blir ny "managed" og har fått id primærnøkkel.
         	
         	tx.commit();
         	
